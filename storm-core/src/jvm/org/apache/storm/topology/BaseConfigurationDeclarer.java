@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.Config;
+
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.storm.utils.Utils;
 
 public abstract class BaseConfigurationDeclarer<T extends ComponentConfigurationDeclarer> implements ComponentConfigurationDeclarer<T> {
+
     @Override
     public T addConfiguration(String config, Object value) {
         Map<String, Object> configMap = new HashMap<>();
         configMap.put(config, value);
-        return addConfigurations(configMap);
+        return this.addConfigurations(configMap);
     }
 
     @Override
@@ -37,13 +39,13 @@ public abstract class BaseConfigurationDeclarer<T extends ComponentConfiguration
 
     @Override
     public T setMaxTaskParallelism(Number val) {
-        if(val!=null) val = val.intValue();
+        if (val != null) val = val.intValue();
         return addConfiguration(Config.TOPOLOGY_MAX_TASK_PARALLELISM, val);
     }
 
     @Override
     public T setMaxSpoutPending(Number val) {
-        if(val!=null) val = val.intValue();
+        if (val != null) val = val.intValue();
         return addConfiguration(Config.TOPOLOGY_MAX_SPOUT_PENDING, val);
     }
 
@@ -67,7 +69,7 @@ public abstract class BaseConfigurationDeclarer<T extends ComponentConfiguration
         T ret = null;
         ret = setMemoryLoad(onHeap);
 
-        if (offHeap!=null) {
+        if (offHeap != null) {
             offHeap = offHeap.doubleValue();
             ret = addConfiguration(Config.TOPOLOGY_COMPONENT_RESOURCES_OFFHEAP_MEMORY_MB, offHeap);
         }
@@ -76,7 +78,7 @@ public abstract class BaseConfigurationDeclarer<T extends ComponentConfiguration
 
     @Override
     public T setCPULoad(Number amount) {
-        if(amount != null) {
+        if (amount != null) {
             return addConfiguration(Config.TOPOLOGY_COMPONENT_CPU_PCORE_PERCENT, amount);
         }
         return null;

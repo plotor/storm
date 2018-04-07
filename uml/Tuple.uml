@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>org.apache.storm.tuple.Tuple</OriginalElement>
+  <nodes>
+    <node x="0.0" y="174.0">org.apache.storm.trident.tuple.TridentTupleView</node>
+    <node x="231.0" y="87.0">org.apache.storm.tuple.Tuple</node>
+    <node x="18.5" y="87.0">org.apache.storm.trident.tuple.TridentTuple</node>
+    <node x="214.0" y="174.0">org.apache.storm.tuple.TupleImpl</node>
+    <node x="131.125" y="0.0">org.apache.storm.tuple.ITuple</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.apache.storm.tuple.TupleImpl" target="org.apache.storm.tuple.Tuple">
+      <point x="0.0" y="-18.5" />
+      <point x="0.0" y="18.5" />
+    </edge>
+    <edge source="org.apache.storm.trident.tuple.TridentTupleView" target="org.apache.storm.trident.tuple.TridentTuple">
+      <point x="-48.5" y="-18.5" />
+      <point x="48.5" y="149.0" />
+      <point x="57.75" y="149.0" />
+      <point x="-39.25" y="18.5" />
+    </edge>
+    <edge source="org.apache.storm.trident.tuple.TridentTuple" target="org.apache.storm.tuple.ITuple">
+      <point x="0.0" y="-18.5" />
+      <point x="97.0" y="62.0" />
+      <point x="158.125" y="62.0" />
+      <point x="-27.0" y="18.5" />
+    </edge>
+    <edge source="org.apache.storm.tuple.Tuple" target="org.apache.storm.tuple.ITuple">
+      <point x="0.0" y="-18.5" />
+      <point x="282.5" y="62.0" />
+      <point x="212.125" y="62.0" />
+      <point x="27.0" y="18.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="54.0" y="62.0" />
+  <SelectedNodes />
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

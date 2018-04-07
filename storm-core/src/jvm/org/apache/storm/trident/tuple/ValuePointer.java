@@ -15,38 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.trident.tuple;
 
-import org.apache.storm.tuple.Fields;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.storm.tuple.Fields;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ValuePointer {
     public static Map<String, ValuePointer> buildFieldIndex(ValuePointer[] pointers) {
         Map<String, ValuePointer> ret = new HashMap<String, ValuePointer>();
-        for(ValuePointer ptr: pointers) {
+        for (ValuePointer ptr : pointers) {
             ret.put(ptr.field, ptr);
         }
-        return ret;        
+        return ret;
     }
 
     public static ValuePointer[] buildIndex(Fields fieldsOrder, Map<String, ValuePointer> pointers) {
-        if(fieldsOrder.size()!=pointers.size()) {
+        if (fieldsOrder.size() != pointers.size()) {
             throw new IllegalArgumentException("Fields order must be same length as pointers map");
         }
         ValuePointer[] ret = new ValuePointer[pointers.size()];
-        for(int i=0; i<fieldsOrder.size(); i++) {
+        for (int i = 0; i < fieldsOrder.size(); i++) {
             ret[i] = pointers.get(fieldsOrder.get(i));
         }
         return ret;
-    }    
-    
+    }
+
     public int delegateIndex;
     protected int index;
     protected String field;
-    
+
     public ValuePointer(int delegateIndex, int index, String field) {
         this.delegateIndex = delegateIndex;
         this.index = index;
@@ -56,5 +57,5 @@ public class ValuePointer {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
-    }    
+    }
 }

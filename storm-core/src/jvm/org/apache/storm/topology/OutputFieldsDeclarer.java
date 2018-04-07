@@ -15,18 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.tuple.Fields;
-
 
 public interface OutputFieldsDeclarer {
     /**
      * Uses default stream id.
      */
-    public void declare(Fields fields);
-    public void declare(boolean direct, Fields fields);
-    
-    public void declareStream(String streamId, Fields fields);
-    public void declareStream(String streamId, boolean direct, Fields fields);
+    void declare(Fields fields);
+
+    void declare(boolean direct, Fields fields);
+
+    void declareStream(String streamId, Fields fields);
+
+    void declareStream(String streamId, boolean direct, Fields fields);
 }

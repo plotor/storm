@@ -15,54 +15,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.tuple;
 
 import org.apache.storm.generated.GlobalStreamId;
 
 /**
- * The tuple is the main data structure in Storm. A tuple is a named list of values, 
- * where each value can be any type. Tuples are dynamically typed -- the types of the fields 
- * do not need to be declared. Tuples have helper methods like getInteger and getString 
+ * The tuple is the main data structure in Storm. A tuple is a named list of values,
+ * where each value can be any type. Tuples are dynamically typed -- the types of the fields
+ * do not need to be declared. Tuples have helper methods like getInteger and getString
  * to get field values without having to cast the result.
- * 
- * Storm needs to know how to serialize all the values in a tuple. By default, Storm 
- * knows how to serialize the primitive types, strings, and byte arrays. If you want to 
+ *
+ * Storm needs to know how to serialize all the values in a tuple. By default, Storm
+ * knows how to serialize the primitive types, strings, and byte arrays. If you want to
  * use another type, you'll need to implement and register a serializer for that type.
  *
  * @see <a href="http://storm.apache.org/documentation/Serialization.html">Serialization</a>
  */
-public interface Tuple extends ITuple{
+public interface Tuple extends ITuple {
 
     /**
      * Returns the global stream id (component + stream) of this tuple.
-     * 
+     *
      * @deprecated replaced by {@link #getSourceGlobalStreamId()} due to broken naming convention
      */
     @Deprecated
-    public GlobalStreamId getSourceGlobalStreamid();
-    
+    GlobalStreamId getSourceGlobalStreamid();
+
     /**
      * Returns the global stream id (component + stream) of this tuple.
      */
-    public GlobalStreamId getSourceGlobalStreamId();
+    GlobalStreamId getSourceGlobalStreamId();
 
     /**
      * Gets the id of the component that created this tuple.
      */
-    public String getSourceComponent();
-    
+    String getSourceComponent();
+
     /**
      * Gets the id of the task that created this tuple.
      */
-    public int getSourceTask();
-    
+    int getSourceTask();
+
     /**
      * Gets the id of the stream that this tuple was emitted to.
      */
-    public String getSourceStreamId();
-    
+    String getSourceStreamId();
+
     /**
      * Gets the message id that associated with this tuple.
      */
-    public MessageId getMessageId();
+    MessageId getMessageId();
 }

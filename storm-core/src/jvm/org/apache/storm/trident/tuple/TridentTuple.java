@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.trident.tuple;
 
 import org.apache.storm.tuple.ITuple;
@@ -25,9 +26,11 @@ import java.util.Map;
 
 public interface TridentTuple extends ITuple, List<Object> {
 
-    public static interface Factory extends Serializable {
+    interface Factory extends Serializable {
         Map<String, ValuePointer> getFieldIndex();
+
         List<String> getOutputFields();
+
         int numDelegates();
     }
 
