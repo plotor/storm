@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.task.IBolt;
@@ -22,8 +23,9 @@ import org.apache.storm.task.IBolt;
 /**
  * When writing topologies using Java, {@link IRichBolt} and {@link IRichSpout} are the main interfaces
  * to use to implement components of the topology.
- *
  */
 public interface IRichBolt extends IBolt, IComponent {
+
+    /* 使用 OutputCollector 输出收集器 */
 
 }

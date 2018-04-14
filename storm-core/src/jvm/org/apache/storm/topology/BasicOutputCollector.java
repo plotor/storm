@@ -15,17 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.task.IOutputCollector;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.utils.Utils;
+
 import java.util.List;
 
-
 public class BasicOutputCollector implements IBasicOutputCollector {
+
     private OutputCollector out;
+
     private Tuple inputTuple;
 
     public BasicOutputCollector(OutputCollector out) {
@@ -53,12 +56,13 @@ public class BasicOutputCollector implements IBasicOutputCollector {
     }
 
     /**
-    * Resets the message timeout for any tuple trees to which the given tuple belongs.
-    * The timeout is reset to Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS.
-    * Note that this is an expensive operation, and should be used sparingly.
-    * @param tuple the tuple to reset timeout for
-    */
-    public void resetTimeout(Tuple tuple){
+     * Resets the message timeout for any tuple trees to which the given tuple belongs.
+     * The timeout is reset to Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS.
+     * Note that this is an expensive operation, and should be used sparingly.
+     *
+     * @param tuple the tuple to reset timeout for
+     */
+    public void resetTimeout(Tuple tuple) {
         out.resetTimeout(tuple);
     }
 

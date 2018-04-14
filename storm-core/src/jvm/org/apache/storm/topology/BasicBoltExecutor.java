@@ -15,53 +15,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.tuple.Tuple;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 public class BasicBoltExecutor implements IRichBolt {
+
+    private static final long serialVersionUID = 6895488640270066922L;
+
     public static final Logger LOG = LoggerFactory.getLogger(BasicBoltExecutor.class);
-    
+
     private IBasicBolt _bolt;
+
     private transient BasicOutputCollector _collector;
-    
+
     public BasicBoltExecutor(IBasicBolt bolt) {
         _bolt = bolt;
     }
 
+    @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         _bolt.declareOutputFields(declarer);
     }
 
-    
+    @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         _bolt.prepare(stormConf, context);
         _collector = new BasicOutputCollector(collector);
     }
 
+    @Override
     public void execute(Tuple input) {
         _collector.setContext(input);
         try {
             _bolt.execute(input, _collector);
             _collector.getOutputter().ack(input);
-        } catch(FailedException e) {
-            if(e instanceof ReportedFailedException) {
+        } catch (FailedException e) {
+            if (e instanceof ReportedFailedException) {
                 _collector.reportError(e);
             }
             _collector.getOutputter().fail(input);
         }
     }
 
+    @Override
     public void cleanup() {
         _bolt.cleanup();
     }
 
+    @Override
     public Map<String, Object> getComponentConfiguration() {
         return _bolt.getComponentConfiguration();
     }
+
 }

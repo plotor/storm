@@ -15,20 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.Config;
-import org.apache.storm.generated.*;
+import org.apache.storm.generated.Bolt;
+import org.apache.storm.generated.ComponentCommon;
+import org.apache.storm.generated.ComponentObject;
+import org.apache.storm.generated.GlobalStreamId;
+import org.apache.storm.generated.Grouping;
+import org.apache.storm.generated.NullStruct;
+import org.apache.storm.generated.SpoutSpec;
+import org.apache.storm.generated.StateSpoutSpec;
+import org.apache.storm.generated.StormTopology;
 import org.apache.storm.grouping.CustomStreamGrouping;
 import org.apache.storm.grouping.PartialKeyGrouping;
 import org.apache.storm.hooks.IWorkerHook;
 import org.apache.storm.spout.CheckpointSpout;
+import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_COMPONENT_ID;
+import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_STREAM_ID;
 import org.apache.storm.state.State;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.utils.Utils;
+import org.apache.storm.windowing.TupleWindow;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
@@ -41,12 +53,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.storm.windowing.TupleWindow;
-import org.json.simple.JSONValue;
-import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_COMPONENT_ID;
-import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_STREAM_ID;
-
 /**
+ * 基本 topology 构建器
+ *
  * TopologyBuilder exposes the Java API for specifying a topology for Storm
  * to execute. Topologies are Thrift structures in the end, but since the Thrift API
  * is so verbose, TopologyBuilder greatly eases the process of creating topologies.
@@ -58,14 +67,14 @@ import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_STREAM_ID;
  * builder.setSpout("1", new TestWordSpout(true), 5);
  * builder.setSpout("2", new TestWordSpout(true), 3);
  * builder.setBolt("3", new TestWordCounter(), 3)
- *          .fieldsGrouping("1", new Fields("word"))
- *          .fieldsGrouping("2", new Fields("word"));
+ * .fieldsGrouping("1", new Fields("word"))
+ * .fieldsGrouping("2", new Fields("word"));
  * builder.setBolt("4", new TestGlobalCount())
- *          .globalGrouping("1");
+ * .globalGrouping("1");
  *
  * Map conf = new HashMap();
  * conf.put(Config.TOPOLOGY_WORKERS, 4);
- * 
+ *
  * StormSubmitter.submitTopology("mytopology", conf, builder.createTopology());
  * ```
  *
@@ -79,10 +88,10 @@ import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_STREAM_ID;
  * builder.setSpout("1", new TestWordSpout(true), 5);
  * builder.setSpout("2", new TestWordSpout(true), 3);
  * builder.setBolt("3", new TestWordCounter(), 3)
- *          .fieldsGrouping("1", new Fields("word"))
- *          .fieldsGrouping("2", new Fields("word"));
+ * .fieldsGrouping("1", new Fields("word"))
+ * .fieldsGrouping("2", new Fields("word"));
  * builder.setBolt("4", new TestGlobalCount())
- *          .globalGrouping("1");
+ * .globalGrouping("1");
  *
  * Map conf = new HashMap();
  * conf.put(Config.TOPOLOGY_WORKERS, 4);
@@ -99,6 +108,7 @@ import static org.apache.storm.spout.CheckpointSpout.CHECKPOINT_STREAM_ID;
  * the inputs for that component.
  */
 public class TopologyBuilder {
+
     private Map<String, IRichBolt> _bolts = new HashMap<>();
     private Map<String, IRichSpout> _spouts = new HashMap<>();
     private Map<String, ComponentCommon> _commons = new HashMap<>();
@@ -109,39 +119,38 @@ public class TopologyBuilder {
     private Map<String, StateSpoutSpec> _stateSpouts = new HashMap<>();
     private List<ByteBuffer> _workerHooks = new ArrayList<>();
 
-
     public StormTopology createTopology() {
         Map<String, Bolt> boltSpecs = new HashMap<>();
         Map<String, SpoutSpec> spoutSpecs = new HashMap<>();
         maybeAddCheckpointSpout();
-        for(String boltId: _bolts.keySet()) {
+        for (String boltId : _bolts.keySet()) {
             IRichBolt bolt = _bolts.get(boltId);
             bolt = maybeAddCheckpointTupleForwarder(bolt);
             ComponentCommon common = getComponentCommon(boltId, bolt);
-            try{
+            try {
                 maybeAddCheckpointInputs(common);
                 boltSpecs.put(boltId, new Bolt(ComponentObject.serialized_java(Utils.javaSerialize(bolt)), common));
-            }catch(RuntimeException wrapperCause){
-                if (wrapperCause.getCause() != null && NotSerializableException.class.equals(wrapperCause.getCause().getClass())){
+            } catch (RuntimeException wrapperCause) {
+                if (wrapperCause.getCause() != null && NotSerializableException.class.equals(wrapperCause.getCause().getClass())) {
                     throw new IllegalStateException(
-                        "Bolt '" + boltId + "' contains a non-serializable field of type " + wrapperCause.getCause().getMessage() + ", " +
-                        "which was instantiated prior to topology creation. " + wrapperCause.getCause().getMessage() + " " +
-                        "should be instantiated within the prepare method of '" + boltId + " at the earliest.", wrapperCause);
+                            "Bolt '" + boltId + "' contains a non-serializable field of type " + wrapperCause.getCause().getMessage() + ", " +
+                                    "which was instantiated prior to topology creation. " + wrapperCause.getCause().getMessage() + " " +
+                                    "should be instantiated within the prepare method of '" + boltId + " at the earliest.", wrapperCause);
                 }
                 throw wrapperCause;
             }
         }
-        for(String spoutId: _spouts.keySet()) {
+        for (String spoutId : _spouts.keySet()) {
             IRichSpout spout = _spouts.get(spoutId);
             ComponentCommon common = getComponentCommon(spoutId, spout);
-            try{
+            try {
                 spoutSpecs.put(spoutId, new SpoutSpec(ComponentObject.serialized_java(Utils.javaSerialize(spout)), common));
-            }catch(RuntimeException wrapperCause){
-                if (wrapperCause.getCause() != null && NotSerializableException.class.equals(wrapperCause.getCause().getClass())){
+            } catch (RuntimeException wrapperCause) {
+                if (wrapperCause.getCause() != null && NotSerializableException.class.equals(wrapperCause.getCause().getClass())) {
                     throw new IllegalStateException(
-                        "Spout '" + spoutId + "' contains a non-serializable field of type " + wrapperCause.getCause().getMessage() + ", " +
-                        "which was instantiated prior to topology creation. " + wrapperCause.getCause().getMessage() + " " +
-                        "should be instantiated within the prepare method of '" + spoutId + " at the earliest.", wrapperCause);
+                            "Spout '" + spoutId + "' contains a non-serializable field of type " + wrapperCause.getCause().getMessage() + ", " +
+                                    "which was instantiated prior to topology creation. " + wrapperCause.getCause().getMessage() + " " +
+                                    "should be instantiated within the prepare method of '" + spoutId + " at the earliest.", wrapperCause);
                 }
                 throw wrapperCause;
             }
@@ -253,6 +262,7 @@ public class TopologyBuilder {
      * The framework provides at-least once guarantee for the state updates. Bolts (both stateful and non-stateful) in a stateful topology
      * are expected to anchor the tuples while emitting and ack the input tuples once its processed.
      * </p>
+     *
      * @param id the id of this component. This id is referenced by other components that want to consume this bolt's outputs.
      * @param bolt the stateful bolt
      * @return use the returned object to declare the inputs to this component
@@ -271,6 +281,7 @@ public class TopologyBuilder {
      * The framework provides at-least once guarantee for the state updates. Bolts (both stateful and non-stateful) in a stateful topology
      * are expected to anchor the tuples while emitting and ack the input tuples once its processed.
      * </p>
+     *
      * @param id the id of this component. This id is referenced by other components that want to consume this bolt's outputs.
      * @param bolt the stateful bolt
      * @param parallelism_hint the number of tasks that should be assigned to execute this bolt. Each task will run on a thread in a process somwehere around the cluster.
@@ -359,7 +370,7 @@ public class TopologyBuilder {
      * @param workerHook the lifecycle hook to add
      */
     public void addWorkerHook(IWorkerHook workerHook) {
-        if(null == workerHook) {
+        if (null == workerHook) {
             throw new IllegalArgumentException("WorkerHook must not be null.");
         }
 
@@ -367,13 +378,13 @@ public class TopologyBuilder {
     }
 
     private void validateUnusedId(String id) {
-        if(_bolts.containsKey(id)) {
+        if (_bolts.containsKey(id)) {
             throw new IllegalArgumentException("Bolt has already been declared for id " + id);
         }
-        if(_spouts.containsKey(id)) {
+        if (_spouts.containsKey(id)) {
             throw new IllegalArgumentException("Spout has already been declared for id " + id);
         }
-        if(_stateSpouts.containsKey(id)) {
+        if (_stateSpouts.containsKey(id)) {
             throw new IllegalArgumentException("State spout has already been declared for id " + id);
         }
     }
@@ -437,28 +448,30 @@ public class TopologyBuilder {
     private void initCommon(String id, IComponent component, Number parallelism) throws IllegalArgumentException {
         ComponentCommon common = new ComponentCommon();
         common.set_inputs(new HashMap<GlobalStreamId, Grouping>());
-        if(parallelism!=null) {
+        if (parallelism != null) {
             int dop = parallelism.intValue();
-            if(dop < 1) {
+            if (dop < 1) {
                 throw new IllegalArgumentException("Parallelism must be positive.");
             }
             common.set_parallelism_hint(dop);
         }
         Map conf = component.getComponentConfiguration();
-        if(conf!=null) common.set_json_conf(JSONValue.toJSONString(conf));
+        if (conf != null) common.set_json_conf(JSONValue.toJSONString(conf));
         _commons.put(id, common);
     }
 
     protected class ConfigGetter<T extends ComponentConfigurationDeclarer> extends BaseConfigurationDeclarer<T> {
+
+        // 组件的唯一标识符
         String _id;
-        
+
         public ConfigGetter(String id) {
             _id = id;
         }
-        
+
         @Override
         public T addConfigurations(Map<String, Object> conf) {
-            if(conf!=null && conf.containsKey(Config.TOPOLOGY_KRYO_REGISTER)) {
+            if (conf != null && conf.containsKey(Config.TOPOLOGY_KRYO_REGISTER)) {
                 throw new IllegalArgumentException("Cannot set serializations for a component using fluent API");
             }
             String currConf = _commons.get(_id).get_json_conf();
@@ -466,13 +479,13 @@ public class TopologyBuilder {
             return (T) this;
         }
     }
-    
+
     protected class SpoutGetter extends ConfigGetter<SpoutDeclarer> implements SpoutDeclarer {
         public SpoutGetter(String id) {
             super(id);
-        }        
+        }
     }
-    
+
     protected class BoltGetter extends ConfigGetter<BoltDeclarer> implements BoltDeclarer {
         private String _boltId;
 
@@ -512,7 +525,7 @@ public class TopologyBuilder {
         public BoltDeclarer localOrShuffleGrouping(String componentId, String streamId) {
             return grouping(componentId, streamId, Grouping.local_or_shuffle(new NullStruct()));
         }
-        
+
         public BoltDeclarer noneGrouping(String componentId) {
             return noneGrouping(componentId, Utils.DEFAULT_STREAM_ID);
         }
@@ -565,11 +578,11 @@ public class TopologyBuilder {
         @Override
         public BoltDeclarer grouping(GlobalStreamId id, Grouping grouping) {
             return grouping(id.get_componentId(), id.get_streamId(), grouping);
-        }        
+        }
     }
-    
+
     private static Map parseJson(String json) {
-        if (json==null) {
+        if (json == null) {
             return new HashMap();
         } else {
             try {
@@ -579,10 +592,10 @@ public class TopologyBuilder {
             }
         }
     }
-    
+
     private static String mergeIntoJson(Map into, Map newMap) {
         Map res = new HashMap(into);
-        if(newMap!=null) res.putAll(newMap);
+        if (newMap != null) res.putAll(newMap);
         return JSONValue.toJSONString(res);
     }
 }

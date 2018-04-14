@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.topology;
 
 import org.apache.storm.spout.ISpout;
@@ -22,7 +23,6 @@ import org.apache.storm.spout.ISpout;
 /**
  * When writing topologies using Java, {@link IRichBolt} and {@link IRichSpout} are the main interfaces
  * to use to implement components of the topology.
- *
  */
 public interface IRichSpout extends ISpout, IComponent {
 

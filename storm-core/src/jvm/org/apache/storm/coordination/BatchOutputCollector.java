@@ -15,11 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.coordination;
 
 import org.apache.storm.utils.Utils;
+
 import java.util.List;
 
+/**
+ * 数据批处理数据收集器
+ */
 public abstract class BatchOutputCollector {
 
     /**
@@ -30,7 +35,7 @@ public abstract class BatchOutputCollector {
     }
 
     public abstract List<Integer> emit(String streamId, List<Object> tuple);
-    
+
     /**
      * Emits a tuple to the specified task on the default output stream. This output
      * stream must have been declared as a direct stream, and the specified task must
@@ -39,8 +44,8 @@ public abstract class BatchOutputCollector {
     public void emitDirect(int taskId, List<Object> tuple) {
         emitDirect(taskId, Utils.DEFAULT_STREAM_ID, tuple);
     }
-    
-    public abstract void emitDirect(int taskId, String streamId, List<Object> tuple); 
-    
+
+    public abstract void emitDirect(int taskId, String streamId, List<Object> tuple);
+
     public abstract void reportError(Throwable error);
 }

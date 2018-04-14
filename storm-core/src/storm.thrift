@@ -43,13 +43,15 @@ struct NullStruct {
   
 }
 
+// 标识每一个组件的流信息
 struct GlobalStreamId {
-  1: required string componentId;
-  2: required string streamId;
+  1: required string componentId; // 标记流属于哪个组件
+  2: required string streamId; // 流的标识
   #Going to need to add an enum for the stream type (NORMAL or FAILURE)
 }
 
-union Grouping {
+// 消息分组方式
+union Grouping { // union 类型，表示分组方式只能采取一种
   1: list<string> fields; //empty list means global grouping
   2: NullStruct shuffle; // tuple is sent to random task
   3: NullStruct all; // tuple is sent to every task
@@ -60,11 +62,13 @@ union Grouping {
   8: NullStruct local_or_shuffle; // prefer sending to tasks in the same worker process, otherwise shuffle
 }
 
+//
 struct StreamInfo {
-  1: required list<string> output_fields;
-  2: required bool direct;
+  1: required list<string> output_fields; // 输出的字段名称列表
+  2: required bool direct; // 是否为直接流
 }
 
+// 用于非 java 语言的交互
 struct ShellComponent {
   // should change this to 1: required list<string> execution_command;
   1: string execution_command;
@@ -77,8 +81,9 @@ union ComponentObject {
   3: JavaObject java_object;
 }
 
+// 表示 topology 的基础对象
 struct ComponentCommon {
-  1: required map<GlobalStreamId, Grouping> inputs;
+  1: required map<GlobalStreamId, Grouping> inputs; // 表示该组件将从哪些 GlobalStreamId 以何种分组方式接受数据
   2: required map<string, StreamInfo> streams; //key is stream id
   3: optional i32 parallelism_hint; //how many threads across the cluster should be dedicated to this component
 
@@ -93,7 +98,7 @@ struct ComponentCommon {
 }
 
 struct SpoutSpec {
-  1: required ComponentObject spout_object;
+  1: required ComponentObject spout_object; // 实现具体 spout 逻辑的 spout_object 对象
   2: required ComponentCommon common;
   // can force a spout to be non-distributed by overriding the component configuration
   // and setting TOPOLOGY_MAX_TASK_PARALLELISM to 1
@@ -111,6 +116,7 @@ struct StateSpoutSpec {
   2: required ComponentCommon common;
 }
 
+// 描述 topology 的组成
 struct StormTopology {
   //ids must be unique across maps
   // #workers to use is in conf
@@ -148,6 +154,7 @@ exception KeyAlreadyExistsException {
   1: required string msg;
 }
 
+// 描述了用户提交的 topology 基本情况
 struct TopologySummary {
   1: required string id;
   2: required string name;
@@ -167,6 +174,7 @@ struct TopologySummary {
 526: optional double assigned_cpu;
 }
 
+// 描述了每一个 supervivor 的基本信息
 struct SupervisorSummary {
   1: required string host;
   2: required i32 uptime_secs;
@@ -187,6 +195,7 @@ struct NimbusSummary {
   5: required string version;
 }
 
+// 保存了集群中所有包的 supervivor 的数目及其基本信息，还保存了正在集群上运行的 topology 的基本信息。
 struct ClusterSummary {
   1: required list<SupervisorSummary> supervisors;
   //@deprecated, please use nimbuses.uptime_secs instead.
@@ -202,6 +211,7 @@ struct ErrorInfo {
   4: optional i32 port;
 }
 
+// bolt 运行统计信息
 struct BoltStats {
   1: required map<string, map<GlobalStreamId, i64>> acked;  
   2: required map<string, map<GlobalStreamId, i64>> failed;  
@@ -210,6 +220,7 @@ struct BoltStats {
   5: required map<string, map<GlobalStreamId, double>> execute_ms_avg;
 }
 
+// spout 运行统计信息
 struct SpoutStats {
   1: required map<string, map<string, i64>> acked;
   2: required map<string, map<string, i64>> failed;

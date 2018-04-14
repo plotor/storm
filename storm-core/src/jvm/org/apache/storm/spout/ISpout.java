@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.spout;
 
 import org.apache.storm.task.TopologyContext;
-import java.util.Map;
+
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * ISpout is the core interface for implementing spouts. A Spout is responsible
@@ -39,11 +41,17 @@ import java.io.Serializable;
  * will not receive any ack or fail callbacks for the message.
  *
  * Storm executes ack, fail, and nextTuple all on the same thread. This means that an implementor
- * of an ISpout does not need to worry about concurrency issues between those methods. However, it 
- * also means that an implementor must ensure that nextTuple is non-blocking: otherwise 
+ * of an ISpout does not need to worry about concurrency issues between those methods. However, it
+ * also means that an implementor must ensure that nextTuple is non-blocking: otherwise
  * the method could block acks and fails that are pending to be processed.
  */
 public interface ISpout extends Serializable {
+
+    /**
+     * nextTuple、ack，以及 fail 方法均在同一个线程中被调用，
+     * 如果 nextTuple 被阻塞，其他方法也会被阻塞
+     */
+
     /**
      * Called when a task for this component is initialized within a worker on the cluster.
      * It provides the spout with the environment in which the spout executes.
@@ -64,15 +72,15 @@ public interface ISpout extends Serializable {
      * killed when running Storm in local mode.
      */
     void close();
-    
+
     /**
      * Called when a spout has been activated out of a deactivated mode.
      * nextTuple will be called on this spout soon. A spout can become activated
-     * after having been deactivated when the topology is manipulated using the 
-     * `storm` client. 
+     * after having been deactivated when the topology is manipulated using the
+     * `storm` client.
      */
     void activate();
-    
+
     /**
      * Called when a spout has been deactivated. nextTuple will not be called while
      * a spout is deactivated. The spout may or may not be reactivated in the future.
@@ -80,7 +88,7 @@ public interface ISpout extends Serializable {
     void deactivate();
 
     /**
-     * When this method is called, Storm is requesting that the Spout emit tuples to the 
+     * When this method is called, Storm is requesting that the Spout emit tuples to the
      * output collector. This method should be non-blocking, so if the Spout has no tuples
      * to emit, this method should return. nextTuple, ack, and fail are all called in a tight
      * loop in a single thread in the spout task. When there are no tuples to emit, it is courteous
