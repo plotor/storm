@@ -628,6 +628,10 @@ struct TopologyHistoryInfo {
   1: list<string> topo_ids;
 }
 
+/**
+ * 1. 对 Topology 的任务进行分配调度
+ * 2. 接收用户的命令并做相应的处理
+ **/
 service Nimbus {
   void submitTopology(1: string name, 2: string uploadedJarLocation, 3: string jsonConf, 4: StormTopology topology) throws (1: AlreadyAliveException e, 2: InvalidTopologyException ite, 3: AuthorizationException aze);
   void submitTopologyWithOpts(1: string name, 2: string uploadedJarLocation, 3: string jsonConf, 4: StormTopology topology, 5: SubmitOptions options) throws (1: AlreadyAliveException e, 2: InvalidTopologyException ite, 3: AuthorizationException aze);

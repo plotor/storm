@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.storm.utils;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -30,7 +31,6 @@ import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.ProducerType;
-
 import org.apache.storm.Config;
 import org.apache.storm.metric.api.IStatefulObject;
 import org.apache.storm.metric.internal.RateTracker;
@@ -58,16 +58,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * 对 Disruptor Queue 的简单封装
+ *
  * A single consumer queue that uses the LMAX Disruptor. They key to the performance is
  * the ability to catch up to the producer by processing tuples in batches.
  */
 public class DisruptorQueue implements IStatefulObject {
+
     private static final Logger LOG = LoggerFactory.getLogger(DisruptorQueue.class);
+
     private static final Object INTERRUPT = new Object();
     private static final String PREFIX = "disruptor-";
     private static final FlusherPool FLUSHER = new FlusherPool();
-    private static final ScheduledThreadPoolExecutor METRICS_REPORTER_EXECUTOR = new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat(PREFIX + "metrics-reporter").build());
+    private static final ScheduledThreadPoolExecutor METRICS_REPORTER_EXECUTOR =
+            new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(PREFIX + "metrics-reporter").build());
 
     private static int getNumFlusherPoolThreads() {
         int numThreads = 100;
@@ -123,7 +127,7 @@ public class DisruptorQueue implements IStatefulObject {
         private synchronized void invokeAll(long flushInterval) {
             ArrayList<Flusher> tasks = _pendingFlush.get(flushInterval);
             if (tasks != null) {
-                for (Flusher f: tasks) {
+                for (Flusher f : tasks) {
                     _exec.submit(f);
                 }
             }
@@ -150,7 +154,9 @@ public class DisruptorQueue implements IStatefulObject {
 
     private interface ThreadLocalInserter {
         public void add(Object obj);
+
         public void forceBatch();
+
         public void flush(boolean block);
     }
 
@@ -303,7 +309,7 @@ public class DisruptorQueue implements IStatefulObject {
 
         public void run() {
             if (_isFlushing.compareAndSet(false, true)) {
-                for (ThreadLocalInserter batcher: _batchers.values()) {
+                for (ThreadLocalInserter batcher : _batchers.values()) {
                     batcher.forceBatch();
                     batcher.flush(true);
                 }
@@ -350,11 +356,11 @@ public class DisruptorQueue implements IStatefulObject {
             return (1.0F * population() / capacity());
         }
 
-        public double arrivalRate(){
+        public double arrivalRate() {
             return _rateTracker.reportRate();
         }
 
-        public double sojournTime(){
+        public double sojournTime() {
             return tuplePopulation.get() / Math.max(arrivalRate(), 0.00001) * 1000.0;
         }
 
@@ -437,11 +443,11 @@ public class DisruptorQueue implements IStatefulObject {
         _disruptorMetrics = StormMetricRegistry.disruptorMetrics(_queueName, topologyId, componentId, taskId, port);
         //The batch size can be no larger than half the full queue size.
         //This is mostly to avoid contention issues.
-        _inputBatchSize = Math.max(1, Math.min(inputBatchSize, size/2));
+        _inputBatchSize = Math.max(1, Math.min(inputBatchSize, size / 2));
 
         _flusher = new Flusher(Math.max(flushInterval, 1), _queueName);
         _flusher.start();
-        if(!METRICS_REPORTER_EXECUTOR.isShutdown()) {
+        if (!METRICS_REPORTER_EXECUTOR.isShutdown()) {
             METRICS_REPORTER_EXECUTOR.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -540,7 +546,7 @@ public class DisruptorQueue implements IStatefulObject {
             tupleCount = ((ArrayList) obj).size();
         } else if (obj instanceof HashMap) {
             tupleCount = 0;
-            for (Object value:((HashMap) obj).values()) {
+            for (Object value : ((HashMap) obj).values()) {
                 tupleCount += ((ArrayList) value).size();
             }
         } else {
@@ -576,7 +582,7 @@ public class DisruptorQueue implements IStatefulObject {
             long begin = end - (size - 1);
             long at = begin;
             long numberOfTuples = 0;
-            for (Object obj: objs) {
+            for (Object obj : objs) {
                 AtomicReference<Object> m = _buffer.get(at);
                 m.set(obj);
                 at++;
@@ -609,12 +615,12 @@ public class DisruptorQueue implements IStatefulObject {
     }
 
     public DisruptorQueue setHighWaterMark(double highWaterMark) {
-        this._highWaterMark = (int)(_metrics.capacity() * highWaterMark);
+        this._highWaterMark = (int) (_metrics.capacity() * highWaterMark);
         return this;
     }
 
     public DisruptorQueue setLowWaterMark(double lowWaterMark) {
-        this._lowWaterMark = (int)(_metrics.capacity() * lowWaterMark);
+        this._lowWaterMark = (int) (_metrics.capacity() * lowWaterMark);
         return this;
     }
 
